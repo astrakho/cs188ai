@@ -90,7 +90,6 @@ def depthFirstSearch(problem):
     from util import Stack
 
     actions = []
-    statestack = Stack()
     visited = []
     fringe = Stack()
 
@@ -101,32 +100,56 @@ def depthFirstSearch(problem):
             visited.append(currentState)
 
         successors = problem.getSuccessors(currentState)
-
-        newActions = successors.copy()
         for s in successors:
             # According to the assignment instructions, only expand nodes we have not visited. Don't put known nodes in
             # the fringe.
             if s[0] not in visited:
+                #Keep the actions taken so far on the fringe with the node to be expanded
+                s = [actions, s]
                 fringe.push(s)
-            else:
-                newActions.remove(s)
 
-        """If no new actions are available, remove the last action taken from the list and return to the parent node."""
-        if not newActions:
-            actions.pop()
-            currentState = statestack.pop()
-        else:
-            nextstate = fringe.pop()
-            statestack.push(currentState)
-            currentState = nextstate[0]
-            actions.append(nextstate[1])
+        fringe_just_popped = fringe.pop()
+        # Item coming off the fringe looks like [[<list of actions for the parent node>, <successor of parent>]
+        actions = fringe_just_popped[0].copy()
+        # Now fringe_just_popped is [<state>, direction, cost]
+        fringe_just_popped = fringe_just_popped[1]
+        currentState = fringe_just_popped[0]
+        actions.append(fringe_just_popped[1])
 
     return actions
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from util import Queue
+
+    actions = []
+    visited = []
+    fringe = Queue()
+
+    currentState = problem.getStartState()
+    while problem.isGoalState(currentState) is not True:
+
+        if currentState not in visited:
+            visited.append(currentState)
+
+        successors = problem.getSuccessors(currentState)
+        for s in successors:
+            # According to the assignment instructions, only expand nodes we have not visited. Don't put known nodes in
+            # the fringe.
+            if s[0] not in visited:
+                # Keep the actions taken so far on the fringe with the node to be expanded
+                s = [actions, s]
+                fringe.push(s)
+
+        fringe_just_popped = fringe.pop()
+        # Item coming off the fringe looks like [[<list of actions for the parent node>, <successor of parent>]
+        actions = fringe_just_popped[0].copy()
+        # Now fringe_just_popped is [<state>, direction, cost]
+        fringe_just_popped = fringe_just_popped[1]
+        currentState = fringe_just_popped[0]
+        actions.append(fringe_just_popped[1])
+
+    return actions
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
