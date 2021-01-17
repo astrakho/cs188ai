@@ -94,27 +94,37 @@ def depthFirstSearch(problem):
     fringe = Stack()
 
     currentState = problem.getStartState()
-    while problem.isGoalState(currentState) is not True:
-
-        if currentState not in visited:
-            visited.append(currentState)
-
+    visited.append(currentState)
+    while True:
         successors = problem.getSuccessors(currentState)
         for s in successors:
             # According to the assignment instructions, only expand nodes we have not visited. Don't put known nodes in
             # the fringe.
             if s[0] not in visited:
-                #Keep the actions taken so far on the fringe with the node to be expanded
+                # Keep the actions taken so far on the fringe with the node to be expanded
+                print("not in visited", s[0])
+                print("visited ", visited)
                 s = [actions, s]
                 fringe.push(s)
 
+        # Keep popping fringe nodes until we get something we haven't seen before. Even though we don't add nodes
+        # to the fringe that are in visited it is possible that there are multiple paths to an unvisited node and we
+        # have added each path to the fringe.
         fringe_just_popped = fringe.pop()
+        while fringe_just_popped[1][0] in visited:
+            fringe_just_popped = fringe.pop()
+
         # Item coming off the fringe looks like [[<list of actions for the parent node>, <successor of parent>]
         actions = fringe_just_popped[0].copy()
         # Now fringe_just_popped is [<state>, direction, cost]
         fringe_just_popped = fringe_just_popped[1]
         currentState = fringe_just_popped[0]
         actions.append(fringe_just_popped[1])
+        visited.append(currentState)
+        if problem.isGoalState(currentState):
+            break
+
+    return actions
 
     return actions
 
@@ -127,34 +137,85 @@ def breadthFirstSearch(problem):
     fringe = Queue()
 
     currentState = problem.getStartState()
-    while problem.isGoalState(currentState) is not True:
-
-        if currentState not in visited:
-            visited.append(currentState)
-
+    visited.append(currentState)
+    while True:
         successors = problem.getSuccessors(currentState)
         for s in successors:
             # According to the assignment instructions, only expand nodes we have not visited. Don't put known nodes in
             # the fringe.
             if s[0] not in visited:
                 # Keep the actions taken so far on the fringe with the node to be expanded
+                print("not in visited", s[0])
+                print("visited ",visited)
                 s = [actions, s]
                 fringe.push(s)
 
+        # Keep popping fringe nodes until we get something we haven't seen before. Even though we don't add nodes
+        # to the fringe that are in visited it is possible that there are multiple paths to an unvisited node and we
+        # have added each path to the fringe.
         fringe_just_popped = fringe.pop()
+        while fringe_just_popped[1][0] in visited:
+            fringe_just_popped = fringe.pop()
+
         # Item coming off the fringe looks like [[<list of actions for the parent node>, <successor of parent>]
         actions = fringe_just_popped[0].copy()
         # Now fringe_just_popped is [<state>, direction, cost]
         fringe_just_popped = fringe_just_popped[1]
         currentState = fringe_just_popped[0]
         actions.append(fringe_just_popped[1])
+        visited.append(currentState)
+        if problem.isGoalState(currentState):
+            break
 
     return actions
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from util import PriorityQueue
+
+    actions = []
+    visited = []
+    total_cost = 0
+    fringe = PriorityQueue()
+
+    currentState = problem.getStartState()
+    while True:
+
+        currentState = problem.getStartState()
+        visited.append(currentState)
+        while True:
+            successors = problem.getSuccessors(currentState)
+            for s in successors:
+                # According to the assignment instructions, only expand nodes we have not visited. Don't put known nodes in
+                # the fringe.
+                if s[0] not in visited:
+                    # Keep the actions taken so far on the fringe with the node to be expanded
+                    fringe_cost = total_cost + s[2]
+                    s = [actions, s, fringe_cost]
+                    fringe.update(s, fringe_cost)
+
+            # Keep popping fringe nodes until we get something we haven't seen before. Even though we don't add nodes
+            # to the fringe that are in visited it is possible that there are multiple paths to an unvisited node and we
+            # have added each path to the fringe.
+            fringe_just_popped = fringe.pop()
+            while fringe_just_popped[1][0] in visited:
+                fringe_just_popped = fringe.pop()
+
+            # Item coming off the fringe looks like [[<list of actions for the parent node>, <successor of parent>, cost]
+            actions = fringe_just_popped[0].copy()
+            total_cost = fringe_just_popped[2]
+            # Now fringe_just_popped is [<state>, direction, cost]
+            fringe_just_popped = fringe_just_popped[1]
+            currentState = fringe_just_popped[0]
+            actions.append(fringe_just_popped[1])
+            visited.append(currentState)
+            if problem.isGoalState(currentState):
+                break
+
+        return actions
+
+    return actions
 
 def nullHeuristic(state, problem=None):
     """
