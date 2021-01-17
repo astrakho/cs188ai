@@ -87,7 +87,41 @@ def depthFirstSearch(problem):
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from util import Stack
+
+    actions = []
+    statestack = Stack()
+    visited = []
+    fringe = Stack()
+
+    currentState = problem.getStartState()
+    while problem.isGoalState(currentState) is not True:
+
+        if currentState not in visited:
+            visited.append(currentState)
+
+        successors = problem.getSuccessors(currentState)
+
+        newActions = successors.copy()
+        for s in successors:
+            # According to the assignment instructions, only expand nodes we have not visited. Don't put known nodes in
+            # the fringe.
+            if s[0] not in visited:
+                fringe.push(s)
+            else:
+                newActions.remove(s)
+
+        """If no new actions are available, remove the last action taken from the list and return to the parent node."""
+        if not newActions:
+            actions.pop()
+            currentState = statestack.pop()
+        else:
+            nextstate = fringe.pop()
+            statestack.push(currentState)
+            currentState = nextstate[0]
+            actions.append(nextstate[1])
+
+    return actions
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
