@@ -353,9 +353,58 @@ class CornersProblem(search.SearchProblem):
             if self.walls[x][y]: return 999999
         return len(actions)
 
+def findClosestCorner(state, corners):
+    x,y = state[0]
+    ccorner = corners[0]
+    min_dist = 99999
+    for c in corners:
+        xdistance = c[0] - x
+        ydistance = c[1] - y
+        crow_distance = abs(xdistance) + abs(ydistance)
+        if crow_distance < min_dist:
+            ccorner = c
+            min_dist = crow_distance
 
-#def findClosestCorner(state, corners):
+    return [ccorner, min_dist]
 
+def getDirectionalValueOfState(state, corner, walls):
+    state_coords = state[0]
+
+    if state_coords == corner:
+        return 0
+
+    xdist = corner[0] - state_coords[0]
+    ydist = corner[1] - state_coords[1]
+
+    value = 0
+    coord = 0
+    wall_length = [0, 0]
+    if xdist and xdist > ydist:
+        xdirection = xdist / abs(xdist)
+        #add 1 for each part of a contiguous wall on this state_coords
+        coord = state_coords[0]
+        wall_line = walls[coord + int(xdirection)][::]
+        coord = state_coords[1]
+    elif ydist:
+        ydirection = ydist / abs(ydist)
+        coord = state_coords[1]
+        wall_line = walls[::][coord + int(ydirection)]
+        coord = state_coords[0]
+    else:
+        return 0
+    coord = int(coord / 2)
+    #print(coord, len(walls[::][0]), len(walls[0][::]), state)
+    i = coord
+    while i > 0 and i < len(wall_line) and wall_line[i]:
+        wall_length[0] += 1
+        i -= 1
+
+    i = coord + 1
+    while i < len(wall_line) and wall_line[i]:
+        i += 1
+        wall_length[1] += 1
+
+    return 2*min(wall_length[0], wall_length[1]) + 1
 
 def cornersHeuristic(state, problem):
     """
@@ -374,13 +423,8 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
     # calculate distance from an unvisited corner
     hval = 999999
-    x,y = state[0]
-    for c in corners:
-        i = corners.index(c)
-        xdistance = corners[i][0] - x
-        ydistance = corners[i][1] - y
-        print(sum(walls[::][y]))
-        hval = min(hval, abs(xdistance) + abs(ydistance))
+    closest_corner = findClosestCorner(state, corners)
+    hval = closest_corner[1] + len(corners) - sum(state[1])#+ #getDirectionalValueOfState(state, closest_corner[0], walls)
 
     "*** YOUR CODE HERE ***"
     return hval
