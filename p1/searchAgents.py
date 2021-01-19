@@ -353,58 +353,32 @@ class CornersProblem(search.SearchProblem):
             if self.walls[x][y]: return 999999
         return len(actions)
 
+import copy
 def findClosestCorner(state, corners):
-    x,y = state[0]
-    ccorner = corners[0]
-    min_dist = 99999
-    for c in corners:
-        xdistance = c[0] - x
-        ydistance = c[1] - y
-        crow_distance = abs(xdistance) + abs(ydistance)
-        if crow_distance < min_dist:
-            ccorner = c
-            min_dist = crow_distance
-
-    return [ccorner, min_dist]
-
-def getDirectionalValueOfState(state, corner, walls):
-    state_coords = state[0]
-
-    if state_coords == corner:
+    statecpy = copy.deepcopy(state)
+    if all(statecpy[1]):
         return 0
-
-    xdist = corner[0] - state_coords[0]
-    ydist = corner[1] - state_coords[1]
-
-    value = 0
-    coord = 0
-    wall_length = [0, 0]
-    if xdist and xdist > ydist:
-        xdirection = xdist / abs(xdist)
-        #add 1 for each part of a contiguous wall on this state_coords
-        coord = state_coords[0]
-        wall_line = walls[coord + int(xdirection)][::]
-        coord = state_coords[1]
-    elif ydist:
-        ydirection = ydist / abs(ydist)
-        coord = state_coords[1]
-        wall_line = walls[::][coord + int(ydirection)]
-        coord = state_coords[0]
     else:
-        return 0
-    coord = int(coord / 2)
-    #print(coord, len(walls[::][0]), len(walls[0][::]), state)
-    i = coord
-    while i > 0 and i < len(wall_line) and wall_line[i]:
-        wall_length[0] += 1
-        i -= 1
+        corners_visited = statecpy[1]
+        min_dist = 9999
+        # Find the closet unvisited corner
+        for c in corners:
+            if not corners_visited[corners.index(c)]:
+                x,y = statecpy[0]
+                xdistance = c[0] - x
+                ydistance = c[1] - y
+                manhattan_distance = abs(xdistance) + abs(ydistance)
+                if manhattan_distance < min_dist:
+                    ccorner = c
+                    min_dist = manhattan_distance
 
-    i = coord + 1
-    while i < len(wall_line) and wall_line[i]:
-        i += 1
-        wall_length[1] += 1
-
-    return 2*min(wall_length[0], wall_length[1]) + 1
+        # Pretend we have actually visited this corner, now find how many corners remain and the distance between them.
+        # This will give us a consistent and admissable heuristic since the easiest version of this problem is an empty
+        # box with no walls. Assume a box 11x11, pacman starting on the bottom at (1,6) The total distance traveled in
+        # this case is the perimiter of the box subtract pacman's distance from the last corner w/r/t the start pos.
+        corners_visited[corners.index(ccorner)] = 1
+        statecpy[0] = ccorner
+        return min_dist + findClosestCorner(statecpy, corners)
 
 def cornersHeuristic(state, problem):
     """
@@ -420,13 +394,9 @@ def cornersHeuristic(state, problem):
     admissible (as well as consistent).
     """
     corners = problem.corners # These are the corner coordinates
-    walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
-    # calculate distance from an unvisited corner
-    hval = 999999
-    closest_corner = findClosestCorner(state, corners)
-    hval = closest_corner[1] + len(corners) - sum(state[1])#+ #getDirectionalValueOfState(state, closest_corner[0], walls)
+    # This heuristic finds how close a state is to an unvisited corner taking into account previously visited corners
+    hval = findClosestCorner(state, corners)
 
-    "*** YOUR CODE HERE ***"
     return hval
 
 class AStarCornersAgent(SearchAgent):
