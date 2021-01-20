@@ -461,6 +461,31 @@ class AStarFoodSearchAgent(SearchAgent):
         self.searchFunction = lambda prob: search.aStarSearch(prob, foodHeuristic)
         self.searchType = FoodSearchProblem
 
+def findClosestFood(pos, foodp):
+    food = foodp.copy()
+
+    if not food:
+        return 0
+    else:
+        closest_food = pos
+        min_dist = 9999
+        # Find the closet unvisited corner
+        for f in food:
+                x,y = pos
+                xdistance = f[0] - x
+                ydistance = f[1] - y
+                manhattan_distance = abs(xdistance) + abs(ydistance)
+                if manhattan_distance < min_dist:
+                    closest_food = f
+                    min_dist = manhattan_distance
+
+        # Pretend we have actually visited this corner, now find how many corners remain and the distance between them.
+        # This will give us a consistent and admissable heuristic since the easiest version of this problem is an empty
+        # box with no walls. Assume a box 11x11, pacman starting on the bottom at (1,6) The total distance traveled in
+        # this case is the perimiter of the box subtract pacman's distance from the last corner w/r/t the start pos.
+        food.remove(closest_food)
+        return len(food)#min_dist + findClosestFood(closest_food, food)
+
 def foodHeuristic(state, problem):
     """
     Your heuristic for the FoodSearchProblem goes here.
@@ -491,7 +516,7 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+    return findClosestFood(position, foodGrid.asList())
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -521,8 +546,24 @@ class ClosestDotSearchAgent(SearchAgent):
         walls = gameState.getWalls()
         problem = AnyFoodSearchProblem(gameState)
 
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        closest_food = pos
+        min_dist = 9999
+        # Find the closet unvisited corner
+        for f in food:
+            x, y = pos
+            xdistance = f[0] - x
+            ydistance = f[1] - y
+            manhattan_distance = abs(xdistance) + abs(ydistance)
+            if manhattan_distance < min_dist:
+                closest_food = f
+                min_dist = manhattan_distance
+
+        # Pretend we have actually visited this corner, now find how many corners remain and the distance between them.
+        # This will give us a consistent and admissable heuristic since the easiest version of this problem is an empty
+        # box with no walls. Assume a box 11x11, pacman starting on the bottom at (1,6) The total distance traveled in
+        # this case is the perimiter of the box subtract pacman's distance from the last corner w/r/t the start pos.
+        food.remove(closest_food)
+        return min_dist + findClosestFood(closest_food, food)
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -556,9 +597,13 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         complete the problem definition.
         """
         x,y = state
+        food = self.food.asList()
 
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        for f in food:
+            if state == f:
+                return True
+
+        return False
 
 def mazeDistance(point1, point2, gameState):
     """
