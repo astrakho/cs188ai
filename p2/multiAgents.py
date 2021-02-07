@@ -134,6 +134,37 @@ class MultiAgentSearchAgent(Agent):
         self.evaluationFunction = util.lookup(evalFn, globals())
         self.depth = int(depth)
 
+def minNode(sa, gameState, depth):
+    minvalue = 1000
+    num_agents = gameState.getNumAgents()
+    #ghost_actions = [gameState.getLegalActions(i) for i in range(1, num_agents)]
+    if gameState.isWin() or gameState.isLose():
+        return sa.evaluationFunction(gameState)
+
+    for i in range(1, num_agents):
+        ghost_actions = gameState.getLegalActions(i)
+        for a in ghost_actions:
+            successor = gameState.generateSuccessor(i, a)
+            if depth == 0:
+                newvalue = sa.evaluationFunction(successor)
+            else:
+                newvalue = maxNode(sa, successor, depth - 1)
+            minvalue = min(minvalue, newvalue)
+
+    return minvalue
+
+def maxNode(sa, gameState, depth):
+    if gameState.isWin() or gameState.isLose():
+        return sa.evaluationFunction(gameState)
+    maxvalue = -10000
+    pacmanLegalActions = gameState.getLegalActions(0)
+    for action in pacmanLegalActions:
+        successor = gameState.generateSuccessor(0, action)
+        newvalue = minNode(sa, successor, depth - 1)
+        maxvalue = max(maxvalue, newvalue)
+
+    return maxvalue
+
 class MinimaxAgent(MultiAgentSearchAgent):
     """
     Your minimax agent (question 2)
@@ -163,7 +194,20 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        depth = self.depth
+        eval_func = self.evaluationFunction
+        isMinAgent = lambda agent_index: agent_index > 1
+
+        pacmanLegalActions = gameState.getLegalActions(0)
+        newvalue = 0
+        best_action = 0
+        maxvalue = -10000
+        for action in pacmanLegalActions:
+            successor = gameState.generateSuccessor(0, action)
+            newvalue = minNode(self, successor, depth)
+            if newvalue >= maxvalue:
+                best_action = action
+        return best_action
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
