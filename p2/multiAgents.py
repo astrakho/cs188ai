@@ -82,14 +82,16 @@ class ReflexAgent(Agent):
             return -1
 
         i = 0
+        #for each ghost on the board, get the next position of that ghost
         for s in newGhostStates:
             i += 1
-            if (s.getDirection() in currentGameState.getLegalActions(1)):
+            if (s.getDirection() in currentGameState.getLegalActions(i)):
                 newGhostPos.append(successorGameState.generateSuccessor(i, s.getDirection()).getGhostStates()[0].getPosition())
             else:
                 newGhostPos.append(s.getPosition())
 
-        if (newPos == newGhostPos):
+        # sharing space with a ghost is very bad
+        if newPos in newGhostPos:
             return -100
 
         if currentGameState.hasFood(newPos[0], newPos[1]):
