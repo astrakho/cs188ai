@@ -134,28 +134,24 @@ class MultiAgentSearchAgent(Agent):
         self.evaluationFunction = util.lookup(evalFn, globals())
         self.depth = int(depth)
 
-def minNode(sa, gameState, depth):
+def minNode(sa, gameState, depth, agentindex):
     minvalue = 1000
     num_agents = gameState.getNumAgents()
     if gameState.isWin() or gameState.isLose():
         return sa.evaluationFunction(gameState)
 
-    succ = gameState
-    maxsucc = gameState
-    minmin = 0
-    for i in range(1, num_agents):
-        ghost_actions = succ.getLegalActions(i)
-        for a in ghost_actions:
-            successor = succ.generateSuccessor(i, a)
+    actions = gameState.getLegalActions(agentindex)
+    for action in actions:
+        newvalue = 0
+        successor = gameState.generateSuccessor(agentindex, action)
+        if agentindex == num_agents - 1:
             newvalue = maxNode(sa, successor, depth - 1)
-            if newvalue <= minvalue:
-                maxsucc = successor
-                minvalue = newvalue
+        else:
+            newvalue = minNode(sa, successor, depth, agentindex + 1)
 
-        succ = maxsucc
-        minmin = minvalue
+        minvalue = min(newvalue, minvalue)
 
-    return minmin
+    return minvalue
 
 def maxNode(sa, gameState, depth):
     if gameState.isWin() or gameState.isLose() or depth == 0:
@@ -164,7 +160,7 @@ def maxNode(sa, gameState, depth):
     pacmanLegalActions = gameState.getLegalActions(0)
     for action in pacmanLegalActions:
         successor = gameState.generateSuccessor(0, action)
-        newvalue = minNode(sa, successor, depth)
+        newvalue = minNode(sa, successor, depth, 1)
         maxvalue = max(maxvalue, newvalue)
 
     return maxvalue
@@ -208,7 +204,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         maxvalue = -10000
         for action in pacmanLegalActions:
             successor = gameState.generateSuccessor(0, action)
-            newvalue = minNode(self, successor, depth)
+            newvalue = minNode(self, successor, depth, 1)
             if newvalue >= maxvalue:
                 best_action = action
                 maxvalue = newvalue
