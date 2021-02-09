@@ -210,6 +210,50 @@ class MinimaxAgent(MultiAgentSearchAgent):
                 maxvalue = newvalue
         return best_action
 
+def minNodeAB(sa, gameState, depth, agentindex, a, b):
+    #print("min ", gameState.state)
+    minvalue = 1000
+    num_agents = gameState.getNumAgents()
+    if gameState.isWin() or gameState.isLose():
+        return sa.evaluationFunction(gameState)
+
+    actions = gameState.getLegalActions(agentindex)
+    for action in actions:
+        newvalue = 0
+        successor = gameState.generateSuccessor(agentindex, action)
+        if agentindex == num_agents - 1:
+            newvalue, dum = maxNodeAB(sa, successor, depth - 1, a, b)
+        else:
+            newvalue = minNodeAB(sa, successor, depth, agentindex + 1, a, b)
+
+        minvalue = min(newvalue, minvalue)
+        if minvalue < a:
+            return minvalue
+        b = min(b, minvalue)
+
+    return minvalue
+
+def maxNodeAB(sa, gameState, depth, a, b):
+    #print("max ", gameState.state)
+    if gameState.isWin() or gameState.isLose() or depth == 0:
+        #print("eval ", gameState.state)
+        return sa.evaluationFunction(gameState), None
+    maxvalue = -10000
+    pacmanLegalActions = gameState.getLegalActions(0)
+    bestAction = None
+    for action in pacmanLegalActions:
+        successor = gameState.generateSuccessor(0, action)
+        newvalue = minNodeAB(sa, successor, depth, 1, a, b)
+        if newvalue > maxvalue:
+            maxvalue = newvalue
+            bestAction = action
+
+        if maxvalue > b:
+            return maxvalue, bestAction
+        a = max(a, maxvalue)
+
+    return maxvalue, bestAction
+
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
     Your minimax agent with alpha-beta pruning (question 3)
@@ -220,7 +264,17 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        depth = self.depth
+        eval_func = self.evaluationFunction
+        isMinAgent = lambda agent_index: agent_index > 1
+
+        pacmanLegalActions = gameState.getLegalActions(0)
+        newvalue = 0
+        best_action = 0
+        maxvalue = -10000
+        a = -100000
+        b = 100000
+        return maxNodeAB(self, gameState, depth, a, b)[1]
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
