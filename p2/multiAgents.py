@@ -299,11 +299,13 @@ def maxNodeExp(sa, gameState, depth):
     pacmanLegalActions = gameState.getLegalActions(0)
     bestAction = None
     for action in pacmanLegalActions:
-        successor = gameState.generateSuccessor(0, action)
-        newvalue = minNodeExp(sa, successor, depth, 1)
-        if newvalue > maxvalue:
-            maxvalue = newvalue
-            bestAction = action
+        if action != "Stop":
+            successor = gameState.generateSuccessor(0, action)
+            newvalue = minNodeExp(sa, successor, depth, 1)
+            if newvalue > maxvalue:
+                maxvalue = newvalue
+                bestAction = action
+
 
     return maxvalue, bestAction
 
@@ -320,8 +322,10 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        return maxNodeExp(self, gameState, self.depth)[1]
+        action = maxNodeExp(self, gameState, self.depth)[1]
+        return action
 
+from math import pow
 def betterEvaluationFunction(currentGameState):
     """
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
@@ -346,19 +350,24 @@ def betterEvaluationFunction(currentGameState):
     minDistToFood = 10000
     for f in food:
         minDistToFood = min(minDistToFood, manhattanDistance(pacmanPos, f))
-    foodValue = -(currentGameState.getNumFood() * 10) + (len(foodGrid.asList(True)) + len(foodGrid.asList(False)) - minDistToFood)
+    foodValue = 0 - (currentGameState.getNumFood() * 10) - minDistToFood
+
+    minDistToCap = 10000
+    capsules = currentGameState.getCapsules()
+    for c in capsules:
+        minDistToCap = min(minDistToCap, manhattanDistance(pacmanPos, c))
+    capVal = 0 - (len(capsules) * 1000) - minDistToCap
+
 
     ghostValue = 0
-
     newGhostStates = currentGameState.getGhostStates()
     for gs in newGhostStates:
         ghostPos = gs.getPosition()
         ghostTimer = gs.scaredTimer
-        ghostValue += manhattanDistance(pacmanPos, ghostPos) * (1 - bool(ghostTimer))
+        ghostValue += -1 / manhattanDistance(pacmanPos, ghostPos) * (1 - bool(ghostTimer))
 
     #if ghost is not scared compute a negative value for ghost distance
-
-    return foodValue + ghostValue + currentGameState.getScore()
+    return foodValue * 10 + ghostValue + currentGameState.getScore() + capVal
 
 # Abbreviation
 better = betterEvaluationFunction
