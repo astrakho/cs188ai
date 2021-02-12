@@ -346,7 +346,7 @@ def betterEvaluationFunction(currentGameState):
     minDistToFood = 10000
     for f in food:
         minDistToFood = min(minDistToFood, manhattanDistance(pacmanPos, f))
-    foodValue = -currentGameState.getNumFood() + (len(foodGrid.asList(True)) + len(foodGrid.asList(False)) - minDistToFood)
+    foodValue = -(currentGameState.getNumFood() * 10) + (len(foodGrid.asList(True)) + len(foodGrid.asList(False)) - minDistToFood)
 
     ghostValue = 0
 
@@ -358,7 +358,7 @@ def betterEvaluationFunction(currentGameState):
 
     #if ghost is not scared compute a negative value for ghost distance
 
-    return foodValue * 10 + ghostValue + currentGameState.getScore()
+    return foodValue + ghostValue + currentGameState.getScore()
 
 # Abbreviation
 better = betterEvaluationFunction
