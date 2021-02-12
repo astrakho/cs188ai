@@ -265,16 +265,47 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         depth = self.depth
-        eval_func = self.evaluationFunction
-        isMinAgent = lambda agent_index: agent_index > 1
-
-        pacmanLegalActions = gameState.getLegalActions(0)
-        newvalue = 0
-        best_action = 0
-        maxvalue = -10000
         a = -100000
         b = 100000
         return maxNodeAB(self, gameState, depth, a, b)[1]
+
+def minNodeExp(sa, gameState, depth, agentindex):
+    #print("min ", gameState.state)
+    minvalue = 1000
+    num_agents = gameState.getNumAgents()
+    if gameState.isWin() or gameState.isLose():
+        return sa.evaluationFunction(gameState)
+
+    actions = gameState.getLegalActions(agentindex)
+    values = []
+    for action in actions:
+        newvalue = 0
+        successor = gameState.generateSuccessor(agentindex, action)
+        if agentindex == num_agents - 1:
+            newvalue, dum = maxNodeExp(sa, successor, depth - 1)
+        else:
+            newvalue = minNodeExp(sa, successor, depth, agentindex + 1)
+
+        values.append(newvalue)
+
+    return sum(values) / len(values)
+
+def maxNodeExp(sa, gameState, depth):
+    #print("max ", gameState.state)
+    if gameState.isWin() or gameState.isLose() or depth == 0:
+        #print("eval ", gameState.state)
+        return sa.evaluationFunction(gameState), None
+    maxvalue = -10000
+    pacmanLegalActions = gameState.getLegalActions(0)
+    bestAction = None
+    for action in pacmanLegalActions:
+        successor = gameState.generateSuccessor(0, action)
+        newvalue = minNodeExp(sa, successor, depth, 1)
+        if newvalue > maxvalue:
+            maxvalue = newvalue
+            bestAction = action
+
+    return maxvalue, bestAction
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
@@ -289,7 +320,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return maxNodeExp(self, gameState, self.depth)[1]
 
 def betterEvaluationFunction(currentGameState):
     """
