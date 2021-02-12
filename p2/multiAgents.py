@@ -330,7 +330,35 @@ def betterEvaluationFunction(currentGameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    if currentGameState.isWin():
+        return 10000
+    elif currentGameState.isLose():
+        return -10000
+
+    # distance to ghost
+    # distance to food
+    # distance to pellet
+    # whether food pellet is active
+    pacmanPos = currentGameState.getPacmanPosition()
+
+    foodGrid = currentGameState.getFood()
+    food = foodGrid.asList()
+    minDistToFood = 10000
+    for f in food:
+        minDistToFood = min(minDistToFood, manhattanDistance(pacmanPos, f))
+    foodValue = -currentGameState.getNumFood() + (len(foodGrid.asList(True)) + len(foodGrid.asList(False)) - minDistToFood)
+
+    ghostValue = 0
+
+    newGhostStates = currentGameState.getGhostStates()
+    for gs in newGhostStates:
+        ghostPos = gs.getPosition()
+        ghostTimer = gs.scaredTimer
+        ghostValue += manhattanDistance(pacmanPos, ghostPos) * (1 - bool(ghostTimer))
+
+    #if ghost is not scared compute a negative value for ghost distance
+
+    return foodValue * 10 + ghostValue + currentGameState.getScore()
 
 # Abbreviation
 better = betterEvaluationFunction
